@@ -33,12 +33,14 @@ export function middleware(request: NextRequest) {
   }
   
   // If trying to access login while already authenticated
-  // Redirect root to dashboard
-  if (pathname === '/') {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
-
   if (pathname === '/login' && authCookie) {
+    // Use x-forwarded-host (set by reverse proxy) to build the correct public URL
+    // Falls back to request.url for local dev
+    const host = request.headers.get('x-forwarded-host')
+    const proto = request.headers.get('x-forwarded-proto') || 'https'
+    if (host) {
+      return NextResponse.redirect(new URL('/dashboard', `${proto}://${host}`))
+    }
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
   
